@@ -1,17 +1,49 @@
 #include "stdafx.h"
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
+string puush;
+string hook;
+bool readSettings() {
+	ifstream f;
+	string line;
+	f.open("settings.ini", ios::in);
+	if(f.is_open()) {
+		for(int i = 0; f.good(); i++ ){			
+			getline(f, line);
+			switch(i) {
+			case 0: 
+				puush = line;
+				break; 
+			case 1:
+				hook = line;
+				break;
+			}
+		}
+		f.close();
+		return true;
+	} else {
+		cout << "Could not find settings.ini" << endl;
+		return false;
+	}
+	return true;
+}
 int main()
-{	
+{
+	if (readSettings() == false)
+	{
+		//return 0;
+	}
 	STARTUPINFOA lpStartupInfo = {sizeof(STARTUPINFOA)};
 	PROCESS_INFORMATION lpProcessInfo={0};
 	memset(&lpProcessInfo, 0, sizeof(lpProcessInfo));
-	memset(&lpProcessInfo, 0, sizeof(lpProcessInfo));	
-	char appname[] = "C:\\Program Files (x86)\\puush\\puush.exe";
-	cout << CreateProcessA(appname,0 ,NULL,NULL,FALSE,NORMAL_PRIORITY_CLASS,NULL,NULL, &lpStartupInfo,&lpProcessInfo) << endl;
+	memset(&lpStartupInfo, 0, sizeof(lpStartupInfo));
+	const char* name = puush.c_str();
+	cout << CreateProcessA(name, NULL, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS, NULL, NULL, &lpStartupInfo, &lpProcessInfo) << endl;
 	cout << GetLastError() << endl;
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE,lpProcessInfo.dwProcessId);
 	if (hProcess == INVALID_HANDLE_VALUE)
@@ -19,7 +51,7 @@ int main()
 		fprintf(stderr, "cannot open that pid\n");
 		return 1;
 	}
-	const char * path = "C:\\Program Files (x86)\\puush\\puush_hook.dll";
+	const char* path = hook.c_str();
 	PVOID mem = VirtualAllocEx(hProcess, NULL, strlen(path) + 1, MEM_COMMIT, PAGE_READWRITE);
 	if (mem == NULL)
 	{
